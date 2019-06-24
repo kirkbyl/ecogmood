@@ -13,19 +13,19 @@ from ecogtools.tools import utilities as utils
 def plot_graphs(graphDict, subset=None, nodeLabels=None, title='', radius=10, noderadius=0.07, alpha=0.3, linewidth=None, linestyle=None, nodecolor=None, edgecolor=None, nodefill=None, fig=None, ax=None, colormap=cm.plasma, **kwargs):
     """
     Plots networkx graphs as a chord diagram
-    
+
     - graphDict is a dictionary of networkx graphs, keys correspond to graph index (0, 1, 2, 3 ...). Graph is either instance of networkx class
         or a dictionary with keys 'pos' and 'neg' if graph contains both increasing and decreasing connections (eg for ICNs)
     - subset specifies the indices (keys) of which graphs to plot
     """
-            
+
     if subset is None:
         subset = range(len(graphDict))
         if len(subset) > 25:
             print 'Plotting first 25'
             subset = range(25)
 
-    if nodeLabels is not None:        
+    if nodeLabels is not None:
         if nodecolor is not None:
             overwriteColor_node = False
         else:
@@ -34,181 +34,183 @@ def plot_graphs(graphDict, subset=None, nodeLabels=None, title='', radius=10, no
             overwriteColor_edge = False
         else:
             overwriteColor_edge = True
-        
+
     if fig == None and ax == None:
         fig, ax, ax1D = utils.custom_subplots(len(subset))
     else:
-        ax1D = np.ravel(ax) 
-    
+        ax1D = np.ravel(ax)
+
     for idx, X in enumerate(subset):
-        
+
         graph = graphDict[X]
 
         if isinstance(graph, dict) and 'pos' in graph:
             for kk, key in enumerate(['pos', 'neg']):
                 # Connections with increased connectivity: solid line
                 if key == 'pos':
-                    linestyle='-'                 
+                    linestyle = '-'
                 # Connections with decreased connectivity: dashed line
                 elif key == 'neg':
-                    #linestyle='--'
-                    linestyle='-'
-                
+                    # linestyle='--'
+                    linestyle = '-'
+
                 if nodeLabels is not None:
                     if overwriteColor_node == True:
-                        nodecolor = get_node_colors(nodeLabels, colormap=colormap)
-                    if overwriteColor_edge == True:                    
-                        edgecolor1, edgecolor2 = get_edge_colors(graph[key].edges(), nodeLabels, colormap=colormap)
-                
+                        nodecolor = get_node_colors(
+                            nodeLabels, colormap=colormap)
+                    if overwriteColor_edge == True:
+                        edgecolor1, edgecolor2 = get_edge_colors(
+                            graph[key].edges(), nodeLabels, colormap=colormap)
+
                 for edgecolor in [edgecolor1, edgecolor2]:
-                    plot_graph_single(graph[key], fig=fig, ax=ax1D[idx], radius=radius, nodecolor=nodecolor, edgecolor=edgecolor, noderadius=noderadius, nodefill=nodefill, linewidth=linewidth, linestyle=linestyle, alpha=alpha)           
+                    plot_graph_single(graph[key], fig=fig, ax=ax1D[idx], radius=radius, nodecolor=nodecolor, edgecolor=edgecolor,
+                                      noderadius=noderadius, nodefill=nodefill, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
                 ax1D[idx].set_title('ICN {0}'.format(str(X+1)), fontsize=11)
         else:
-            
+
             if nodeLabels is not None:
                 if overwriteColor_node == True:
                     nodecolor = get_node_colors(nodeLabels, colormap=colormap)
-                if overwriteColor_edge == True:                    
-                    edgecolor1, edgecolor2 = get_edge_colors(graph.edges(), nodeLabels, colormap=colormap)
-                         
-            for edgecolor in [edgecolor1, edgecolor2]:      
-                plot_graph_single(graph, fig=fig, ax=ax1D[idx], radius=radius, nodecolor=nodecolor, edgecolor=edgecolor, noderadius=noderadius, nodefill=nodefill, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
+                if overwriteColor_edge == True:
+                    edgecolor1, edgecolor2 = get_edge_colors(
+                        graph.edges(), nodeLabels, colormap=colormap)
+
+            for edgecolor in [edgecolor1, edgecolor2]:
+                plot_graph_single(graph, fig=fig, ax=ax1D[idx], radius=radius, nodecolor=nodecolor, edgecolor=edgecolor,
+                                  noderadius=noderadius, nodefill=nodefill, linewidth=linewidth, linestyle=linestyle, alpha=alpha)
             ax1D[idx].set_title('ICN {0}'.format(str(X+1)), fontsize=11)
-            
+
     plt.suptitle(title, fontsize=14)
     plt.show()
-				
+
     return fig
-    
-    
+
+
 def plot_graph_single(graph, radius=10, ax=None, fig=None, nodecolor=None, edgecolor=None, noderadius=None, nodefill=None, linewidth=None, linestyle=None, alpha=None):
     """
     Plot single graph.
     """
-    
+
     nodes = graph.nodes()
     edges = graph.edges()
-    
-    circ = CircosPlot(nodes, edges, radius, noderadius=noderadius, nodecolor=nodecolor, nodefill=nodefill, edgecolor=edgecolor, linewidth=linewidth, linestyle=linestyle, alpha=alpha, fig=fig, ax=ax)
-    
+
+    circ = CircosPlot(nodes, edges, radius, noderadius=noderadius, nodecolor=nodecolor, nodefill=nodefill,
+                      edgecolor=edgecolor, linewidth=linewidth, linestyle=linestyle, alpha=alpha, fig=fig, ax=ax)
+
     if len(circ.edges) >= 2:
         circ.draw()
     else:
         circ.add_nodes()
-        
-    return
 
+    return
 
 
 def get_node_labels(abbrs, regDict):
     """
     Get common labels (eg. STC, AM, HPC etc) for patient-specific electrodes
-    
+
     - abbrs: list of brain regions ['STC', 'AM', 'HP'] etc
     - regDict: dictionary of brain regions: {reg abbr: [electrodes/nodes]}
     """
-    
+
     nodeLabels = collections.OrderedDict()
-    
+
     for ii, rr in enumerate(abbrs):
         nodeLabels[rr] = []
-        
+
         for reg, elecs in regDict.items():
             if rr in reg:
                 nodeLabels[rr] = nodeLabels[rr] + elecs
-    
+
     return nodeLabels
-    
-    
+
+
 def graph_cmap(nColors, colormap=cm.plasma):
     """
     Color pallet for nodes and edges in cord diagram
-    
+
     Inputs:
         - nColors: int, number of desired colors
         - colormap: matplotlib.cm colormap object (default: cm.plasma)
     """
-    
+
     if hasattr(colormap, 'N'):
         # Exclude yellow green and pink from Set3
         if colormap.name == 'Set3':
-            goodInds = [0,2,3,4,5,8,9,10,11]
+            goodInds = [0, 2, 3, 4, 5, 8, 9, 10, 11]
             if nColors <= len(goodInds):
                 cmap = [colormap.colors[cc] for cc in goodInds[0:nColors]]
         else:
             if colormap.N < 256 and nColors <= colormap.N:
-    
+
                 cmap = colormap.colors[0:nColors]
             else:
                 cmap_all = colormap(np.linspace(0.1, 0.9, nColors))
-                
+
                 # Shuffle so similar colors are not right next to each other:
                 cmap = np.vstack((cmap_all[::2], cmap_all[1::2]))
     else:
         print('Colormap not recognized')
 
     return cmap
-    
-    
-    
+
+
 def get_node_colors(nodeLabels, colormap=cm.plasma):
     """
     Define colors for nodes in graph
-    
+
     - nodeLabels: dictionary of {label: [nodes]} (output of get_node_labels)
     """
-    
+
     nColors = len(nodeLabels)
     colors = graph_cmap(nColors, colormap=colormap)
-    
+
     nodecolor = []
-    
+
     for ee, elecs in enumerate(nodeLabels.values()):
-        
+
         for elec in elecs:
-            
+
             nodecolor.append(colors[ee])
 
     return nodecolor
-    
-    
-    
+
+
 def get_node_fills(nodeLabels, emptyNodes=None):
     """
     Define whether to fill or unfill nodes -- unfilled nodes are those that do not have electrodes in that location
-    
+
     - nodeLabels: dictionary of {label: [nodes]} (output of get_node_labels)
     """
-    
+
     nodefill = []
-    
+
     if emptyNodes is None:
         emptyNodes = []
-    
+
     for ee, elecs in enumerate(nodeLabels.values()):
-        
+
         for elec in elecs:
-            
+
             if elec in emptyNodes:
                 nodefill.append(False)
             else:
                 nodefill.append(True)
-    
-    return nodefill
 
+    return nodefill
 
 
 def get_edge_colors(edges, nodeLabels, colormap=cm.plasma):
     """
     Define colors for edges in graph
-    
+
     - nodeLabels: dictionary of {label: [nodes]} (output of get_node_labels)
     - edges: list of edge tuples    
     """
-    
+
     nColors = len(nodeLabels)
     colors = graph_cmap(nColors, colormap=colormap)
-            
+
     edgecolor1 = []
     edgecolor2 = []
 
@@ -218,9 +220,8 @@ def get_edge_colors(edges, nodeLabels, colormap=cm.plasma):
                 edgecolor1.append(colors[ee])
             if edge[1] in elecs:
                 edgecolor2.append(colors[ee])
-                            
-    return edgecolor1, edgecolor2
 
+    return edgecolor1, edgecolor2
 
 
 class CircosPlot(object):
@@ -272,7 +273,7 @@ class CircosPlot(object):
                 self.edgecolor = 'black'
         else:
             self.edgecolor = 'black'
-        
+
         if linewidth is None:
             self.lw = 1
         else:
@@ -282,16 +283,16 @@ class CircosPlot(object):
             self.ls = '-'
         else:
             self.ls = linestyle
-            
+
         if noderadius is None:
             noderadius = 0.05
-        
+
         if alpha is None:
             alpha = 1
-        
+
         if nodefill is not None:
             self.nodefill = nodefill
-        
+
         self.alpha = alpha
         self.radius = radius
         if fig is None:
@@ -344,13 +345,13 @@ class CircosPlot(object):
             x, y = get_cartesian(r, theta)
             if hasattr(self, 'nodefill'):
                 if self.nodefill[nn] == False:
-                    self.nodeprops['facecolor'] = [1,1,1]
+                    self.nodeprops['facecolor'] = [1, 1, 1]
                 else:
                     self.nodeprops['facecolor'] = color
             else:
                 self.nodeprops['facecolor'] = color
             self.nodeprops['edgecolor'] = color
-            
+
             node_patch = patches.Ellipse((x, y), node_r, node_r,
                                          lw=0.15, **self.nodeprops)
             self.ax.add_patch(node_patch)
@@ -381,15 +382,16 @@ class CircosPlot(object):
 
             path = Path(verts, codes)
             self.edgeprops['facecolor'] = 'none'
-            
+
             if isinstance(self.edgecolor, list) and len(self.edgecolor) > 1:
                 self.edgeprops['edgecolor'] = self.edgecolor[ii]
             else:
                 self.edgeprops['edgecolor'] = self.edgecolor
-            patch = patches.PathPatch(path, lw=self.lw, ls=self.ls, alpha=self.alpha, **self.edgeprops)
-            
+            patch = patches.PathPatch(
+                path, lw=self.lw, ls=self.ls, alpha=self.alpha, **self.edgeprops)
+
             self.ax.add_patch(patch)
-            
+
 
 def get_cartesian(r, theta):
     x = r*np.sin(theta)
