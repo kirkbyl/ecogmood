@@ -1,6 +1,6 @@
 # Analysis scripts and classes
 
-###Collection of project-specific modules.
+### Collection of project-specific modules.
 Modules can be imported or executed as scripts from the command line
 
 * **icnetworks**: analysis of intrinsic connectivity networks (ICNs)
@@ -13,4 +13,4 @@ Modules can be imported or executed as scripts from the command line
     * Estimating model performance
 
 * **imsbiomarker**: correlations with IMS
-    * Pooled across patients
+    * Pooling data across patients
